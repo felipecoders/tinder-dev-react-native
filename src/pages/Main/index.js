@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import io from "socket.io-client";
 import { TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-community/async-storage";
 
 import api from "../../services/api";
 
 import Card from "../../components/Card";
+import MatchUser from "../../components/MatchUser";
 import {
   Container,
   CardsContainer,
@@ -21,6 +23,7 @@ import Dislike from "../../assets/dislike.png";
 export default function Main({ navigation }) {
   const id = navigation.getParam("_id");
   const [users, setUsers] = useState([]);
+  const [matchDev, setMatchDev] = useState(null);
 
   useEffect(() => {
     async function loadUsers() {
@@ -32,6 +35,16 @@ export default function Main({ navigation }) {
       setUsers(data);
     }
     loadUsers();
+  }, [id]);
+
+  useEffect(() => {
+    const socket = io("http://192.168.0.104:3333", {
+      query: { user: id }
+    });
+
+    socket.on("match", dev => {
+      setMatchDev(dev);
+    });
   }, [id]);
 
   async function handleDislike() {
@@ -93,6 +106,10 @@ export default function Main({ navigation }) {
             <ButtonIcon source={Like} />
           </Button>
         </ButtonContainer>
+      )}
+
+      {matchDev && (
+        <MatchUser data={matchDev} onClose={() => setMatchDev(null)} />
       )}
     </Container>
   );
